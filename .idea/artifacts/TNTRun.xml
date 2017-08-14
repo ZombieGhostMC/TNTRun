@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="TNTRun">
+    <output-path>$USER_HOME$/Desktop/TNT Run/plugins</output-path>
+    <root id="archive" name="TNTRun.jar">
+      <element id="module-output" name="TNTRun" />
+    </root>
+  </artifact>
+</component>

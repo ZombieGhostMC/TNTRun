@@ -1,0 +1,9 @@
+name: TNTRun
+author: Zambie__
+version: 0.0.1
+main: me.zambie.game.GameCore
+description: Demo for Hypixel.
+
+commands:
+  game:
+    usage: /game [command]
