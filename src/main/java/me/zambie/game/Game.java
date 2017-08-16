@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
@@ -21,13 +22,13 @@ public class Game {
 
     private final Queue<GameEvent> eventQueue = new PriorityQueue<>();
     private final Set<BlockState> blockStateSet = new HashSet<>();
-    private final Scoreboard scoreboard;
+    private Scoreboard scoreboard;
 
     private Arena arena;
     private GamePhase phase = GamePhase.WAITING;
 
     private int time = 10;
-    private long dur = 0;
+    private int dur = 0;
     private boolean running = false;
 
     public Game(GameCore gameCore, ScoreboardManager scoreboardManager) {
@@ -61,6 +62,12 @@ public class Game {
         }.runTaskTimer(gameCore, 0L, 20L);
 
         this.scoreboard = scoreboard;
+    }
+
+    public void broadcastMessage(String string){
+        for (Player player : getArena().getWorld().getPlayers()){
+            player.sendMessage(string);
+        }
     }
 
     public Queue<GameEvent> getEventQueue() {
@@ -138,12 +145,12 @@ public class Game {
         this.running = running;
     }
 
-    public void setDur(long dur) {
+    public void setDuration(int dur) {
         this.dur = dur;
     }
 
     public int getDuration(){
-        return (int) (System.currentTimeMillis() - dur) / 1000;
+        return dur;
     }
 
     public void addBlock(BlockState blockState){
@@ -160,5 +167,15 @@ public class Game {
             blockState.update(true, false);
         }
         blockStateSet.clear();
+
+        for (Player player : arena.getWorld().getPlayers()){
+            player.teleport(Bukkit.getWorld("world").getSpawnLocation());
+            for (PotionEffect effect : player.getActivePotionEffects()){
+                player.removePotionEffect(effect.getType());
+            }
+        }
+
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        arena.setRunning(false);
     }
 }

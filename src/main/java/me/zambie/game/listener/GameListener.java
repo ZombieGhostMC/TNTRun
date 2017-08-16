@@ -1,12 +1,12 @@
 package me.zambie.game.listener;
 
 import me.zambie.game.*;
+import me.zambie.game.events.GameEndEvent;
 import me.zambie.game.events.GameJoinEvent;
 import me.zambie.game.events.GamePhaseChangeEvent;
 import me.zambie.game.events.GameTickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,13 +15,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import javax.xml.crypto.Data;
-import java.sql.Date;
 import java.util.List;
 
 public class GameListener implements Listener {
@@ -105,31 +105,37 @@ public class GameListener implements Listener {
         if (game.isRunning() && game.getPhase().equals(GamePhase.RUNNING)) {
             for (String string : game.getTeam("playing").getEntries()) {
                 Player player = Bukkit.getPlayer(string);
-                if (game.getPhase().equals(GamePhase.RUNNING)) {
-                    Block block1 = player.getLocation().clone().subtract(0, 1, 0).getBlock();
-                    Block block2 = block1.getLocation().clone().subtract(0, 1, 0).getBlock();
+                Block block1 = player.getLocation().clone().subtract(0, 1, 0).getBlock();
+                Block block2 = block1.getLocation().clone().subtract(0, 1, 0).getBlock();
 
-                    game.addBlock(block1.getState());
-                    game.addBlock(block2.getState());
+                game.addBlock(block1.getState());
+                game.addBlock(block2.getState());
 
-                    block1.setType(Material.AIR);
-                    block2.setType(Material.AIR);
+                block1.setType(Material.AIR);
+                block2.setType(Material.AIR);
+
+                if (player.getLocation().getY() < 0){
+                    game.setPlayer(player, game.getTeam("spectator"));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, Integer.MAX_VALUE, false, false));
                 }
             }
         }
 
-        if (game.getPhase().equals(GamePhase.WAITING) && !game.isRunning()){
+        if (game.isRunning()){
+            game.setDuration(game.getDuration() + 1);
+        }
+
+        if (!game.isRunning() && game.getPhase().equals(GamePhase.WAITING)){
             game.setTime(10);
         }else {
             game.setTime(game.getTime() - 1);
         }
 
-        if (game.getPhase().equals(GamePhase.RUNNING)
-                && game.getTeam("playing").getSize() == 1){
+        if (game.getPhase().equals(GamePhase.RUNNING) && game.getTeam("playing").getSize() == 1){
             game.setPhase(GamePhase.END);
         }
 
-        if (game.getTime() <= 0) {
+        if (game.getTime() <= 0 && !(game.getPhase().equals(GamePhase.END))) {
             GameEvent gameEvent = game.getEventQueue().poll();
             if (gameEvent != null) {
                 gameEvent.execute(game);
@@ -170,6 +176,17 @@ public class GameListener implements Listener {
             refreshScoreboard(game.getPhase(), scoreboard, game);
             player.setScoreboard(scoreboard);
         }
+
+        switch (phase){
+            case WAITING: {
+                break;
+            } case RUNNING: {
+                break;
+            } case END: {
+                new GameEndEvent(getGameCore()).execute(game);
+                break;
+            }
+        }
     }
 
     @EventHandler
@@ -180,7 +197,7 @@ public class GameListener implements Listener {
         }
 
         Arena arena = game.getArena();
-        if (arena.getWorld().getPlayers().size() != 1){
+        if (arena.getWorld().getPlayers().size() != 2){
             return;
         }
         game.setRunning(true);

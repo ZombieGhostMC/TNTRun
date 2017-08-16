@@ -42,7 +42,7 @@ public class GameStartEvent implements GameEvent  {
                 game.setPlayer(player, game.getTeam("playing"));
             }
             game.setRunning(false);
-            game.setDur(System.currentTimeMillis());
+            game.setDuration(0);
             game.setPhase(GamePhase.RUNNING);
         }else {
             for (Player player : playerSet) {
@@ -50,6 +50,7 @@ public class GameStartEvent implements GameEvent  {
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_GUITAR, 1F, 1F);
             }
             game.setRunning(true);
+            game.setPhase(GamePhase.RUNNING);
         }
     }
 
